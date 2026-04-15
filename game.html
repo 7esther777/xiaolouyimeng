@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>小楼一梦 - 选人界面</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;
+-webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #222;
+  font-family: "微软雅黑", sans-serif;
+  opacity: 0;
+  animation: pageFadeIn 1s ease forwards;
+}
+
+/* 页面淡入动画 */
+@keyframes pageFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+#mouse-effect {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.bg-wrap {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.bg-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+/* 左侧竖排图标组 */
+.left-icons {
+  position: fixed;
+  top: 20px; left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 999;
+  align-items: center;
+}
+
+/* 规则 */
+.rule-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.rule-img {
+  width: 80px; height: 80px;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+.rule-item:hover .rule-img {
+  transform: scale(1.1);
+}
+.rule-text {
+  margin-top: 4px;
+  color: #fff;
+  font-size: 15px;
+  text-shadow: 1px 1px 3px #000;
+}
+
+/* 前情提要 */
+.before-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.before-img {
+  width: 80px; height: 80px;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+.before-item:hover .before-img {
+  transform: scale(1.1);
+}
+.before-text {
+  margin-top: 4px;
+  color: #fff;
+  font-size: 15px;
+  text-shadow: 1px 1px 3px #000;
+}
+
+/* 人物 */
+.role-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.role-img {
+  width: 80px; height: 80px;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+.role-item:hover .role-img {
+  transform: scale(1.1);
+}
+.role-text {
+  margin-top: 4px;
+  color: #fff;
+  font-size: 15px;
+  text-shadow: 1px 1px 3px #000;
+}
+
+/* 规则弹窗样式 - 卷轴背景 */
+.rule-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  width: 1080px;
+  height: auto;
+  z-index: 9998;
+  display: none;
+  animation: scrollIn 0.5s ease forwards;
+}
+.rule-modal.show {
+  display: block;
+}
+.rule-scroll-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.rule-content {
+  position: absolute;
+  top: 12%;
+  left: 8%;
+  width: 84%;
+  height: 76%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  overflow: hidden;
+  color: #4a3520;
+  font-size: 20px;
+  line-height: 2;
+  text-align: center;
+}
+
+/* 卷轴入场动画 */
+@keyframes scrollIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 新的卷轴人物弹窗 */
+.scroll-role-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  width: 1080px;
+  height: auto;
+  z-index: 9998;
+  display: none;
+  animation: scrollIn 0.5s ease forwards;
+}
+.scroll-role-modal.show {
+  display: block;
+}
+.scroll-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+/* 卷轴内容容器 */
+.scroll-content {
+  position: absolute;
+  top: 12%;
+  left: 8%;
+  width: 84%;
+  height: 76%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+  padding: 0 20px;
+  overflow: hidden;
+}
+/* 卷轴里的主角图片 */
+.scroll-girl-img {
+  width: 220px;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-left: 80px;
+}
+/* 卷轴里的文字 */
+.scroll-girl-text {
+  flex: 1;
+  color: #4a3520;
+  font-size: 17px;
+  line-height: 1.8;
+  text-align: left;
+  overflow: hidden;
+  word-wrap: break-word;
+  max-width: 600px;
+}
+
+/* 人物旁边简介弹窗 */
+.char-tip {
+  position: fixed;
+  width: 260px;
+  background: #f5f0e6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-size: 14px;
+  line-height: 1.6;
+  z-index: 300;
+  display: none;
+  border: 1px solid #d4b996;
+}
+.char-tip.show {
+  display: block;
+}
+
+/* 园冶 */
+.book-icon {
+  position: fixed;
+  top: 428px; left: 306px;
+  width: 80px; height: 60px;
+  background: url('assets/images/book.png') center/contain no-repeat;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+.book-icon:hover {
+  transform: scale(1.1);
+}
+.book-tip {
+  position: fixed;
+  top: 368px; left: 218px;
+  width: 280px;
+  background: #f5f0e6;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  line-height: 1.6;
+  z-index: 200;
+  display: none;
+  border: 1px solid #d4b996;
+}
+.book-tip.show {
+  display: block;
+}
+
+/* 鲁班尺 */
+.luban-icon {
+  position: fixed;
+  top: 428px; right: 480px;
+  width: 80px; height: 60px;
+  background: url('assets/images/luban.png') center/contain no-repeat;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+.luban-icon:hover {
+  transform: scale(1.1);
+}
+.luban-tip {
+  position: fixed;
+  top: 368px; right: 390px;
+  width: 280px;
+  background: #f5f0e6;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  line-height: 1.6;
+  z-index: 200;
+  display: none;
+  border: 1px solid #d4b996;
+}
+.luban-tip.show {
+  display: block;
+}
+
+/* 规 */
+.gui-icon {
+  position: fixed;
+  top: 480px;
+  left: 50%;
+  transform: translateX(-50%) rotate(15deg);
+  width: 80px; height: 60px;
+  background: url('assets/images/gui.png') center/contain no-repeat;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+.gui-icon:hover {
+  transform: translateX(-50%) scale(1.1) rotate(15deg);
+}
+.gui-tip {
+  position: fixed;
+  top: 400px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  background: #f5f0e6;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  line-height: 1.6;
+  z-index: 200;
+  display: none;
+  border: 1px solid #d4b996;
+}
+.gui-tip.show {
+  display: block;
+}
+
+/* 曲尺 */
+.ruler-icon {
+  position: fixed;
+  top: 680px;
+  left: 30%;
+  transform: translateX(-50%) rotate(-10deg);
+  width: 80px; height: 60px;
+  background: url('assets/images/ruler.png') center/contain no-repeat;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+.ruler-icon:hover {
+  transform: translateX(-50%) scale(1.1) rotate(-10deg);
+}
+.ruler-tip {
+  position: fixed;
+  top: 700px;
+  left: 35%;
+  transform: translateX(-50%);
+  width: 280px;
+  background: #f5f0e6;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  line-height: 1.6;
+  z-index: 200;
+  display: none;
+  border: 1px solid #d4b996;
+}
+.ruler-tip.show {
+  display: block;
+}
+
+/* 人物布局 */
+.people-box {
+  position: fixed;
+  bottom: 50px; left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px;
+  align-items: flex-end;
+}
+
+.people-item {
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s;
+  transform-origin: bottom center;
+  position: relative;
+}
+.people-item.active {
+  filter: drop-shadow(0 0 12px rgba(255,255,250,0.7));
+}
+
+.people-item.p1 {
+  transform: translateX(300px) translateY(-200px) scale(0.9);
+}
+.people-item.p1.active {
+  transform: translateX(300px) translateY(-200px) scale(1.1);
+}
+
+.people-item.p2 {
+  transform: translateX(100px) translateY(-100px) scale(1.5);
+}
+.people-item.p2.active {
+  transform: translateX(100px) translateY(-100px) scale(1.7);
+}
+
+.people-item.p3 {
+  transform: translateX(-80px) translateY(-250px) scale(2.0);
+}
+.people-item.p3.active {
+  transform: translateX(-80px) translateY(-250px) scale(2.2);
+}
+
+.people-item.p4 {
+  transform: translateX(-260px) translateY(-170px) scale(1.3);
+}
+.people-item.p4.active {
+  transform: translateX(-260px) translateY(-170px) scale(1.5);
+}
+
+.people-item img {
+  width: 145px;
+  height: auto;
+  pointer-events: none;
+}
+.name-txt {
+  color: #fff;
+  font-size: 16px;
+  text-shadow: 2px 2px 4px #000;
+  margin-top: 8px;
+}
+</style>
+</head>
+<body>
+
+<div id="mouse-effect"></div>
+
+<div class="bg-wrap">
+  <img src="assets/images/game-bg.png" alt="背景">
+</div>
+
+<!-- 左侧三个按钮：规则 → 前情提要 → 人物 -->
+<div class="left-icons">
+  <div class="rule-item" id="ruleBtn">
+    <img src="assets/images/rule.png" class="rule-img" alt="规则">
+    <div class="rule-text">规则</div>
+  </div>
+
+  <div class="before-item" id="storyBtn">
+    <img src="assets/images/before.png" class="before-img" alt="前情提要">
+    <div class="before-text">前情提要</div>
+  </div>
+
+  <div class="role-item" id="roleBtn">
+    <img src="assets/images/littlegirl.png" class="role-img" alt="人物">
+    <div class="role-text">人物</div>
+  </div>
+</div>
+
+<!-- 规则卷轴弹窗 -->
+<div class="rule-modal" id="ruleModal">
+  <img src="assets/images/scroll.png" class="rule-scroll-bg" alt="规则卷轴">
+  <div class="rule-content">
+    <div>
+      <strong>游戏规则</strong><br><br>
+      1. 单击场景中的人物，可查看对应角色介绍<br>
+      2. 双击对应角色，即可进入专属关卡进行体验<br>
+      3. 探索古代建筑工具，解锁榫卯、园林等传统技艺<br>
+      4. 收集古建线索，完成一段跨越时空的古建奇遇之旅
+    </div>
+  </div>
+</div>
+
+<!-- 卷轴人物弹窗 -->
+<div class="scroll-role-modal" id="scrollRoleModal">
+  <img src="assets/images/scroll.png" class="scroll-bg" alt="卷轴">
+  <div class="scroll-content">
+    <img src="assets/images/main.png" class="scroll-girl-img" alt="主角">
+    <div class="scroll-girl-text">
+      <strong>主角：小楼</strong><br><br>
+      一名对中国古建筑怀有浓厚兴趣的现代少女，<br>
+      在一次偶然的梦境中，穿越到了古代园林的营造现场，<br>
+      结识了计成、蒯祥等历代营造大家，<br>
+      一同见证榫卯匠心、园林意境，<br>
+      开启了一段跨越时空的古建奇遇。
+    </div>
+  </div>
+</div>
+
+<!-- 人物介绍小弹窗 -->
+<div class="char-tip" id="charTip"></div>
+
+<!-- 园冶 -->
+<div class="book-icon" id="bookIcon"></div>
+<div class="book-tip" id="bookTip">
+  《园冶》简介：<br>
+  明代计成所著，是中国古代第一本也是最杰出的造园学专著。<br><br>
+  全书分为《相地》《立基》《屋宇》《门窗》《墙垣》《铺地》等篇章，系统总结了中国传统园林选址、布局、营造技艺，强调“虽由人作，宛自天开”。
+</div>
+
+<!-- 鲁班尺 -->
+<div class="luban-icon" id="lubanIcon"></div>
+<div class="luban-tip" id="lubanTip">
+  鲁班尺简介：<br>
+  鲁班尺，又称“鲁般尺”“门公尺”，是中国古代木工营造专用量具。<br><br>
+  尺上刻有八字，用于校验建筑、门窗尺寸吉凶，是传统营造重要工具。
+</div>
+
+<!-- 规 -->
+<div class="gui-icon" id="guiIcon"></div>
+<div class="gui-tip" id="guiTip">
+  规简介：<br>
+  规即圆规，是中国古代最基础的测绘工具之一。<br><br>
+  在古建营造中主要用于画圆、取正、定角度，保证建筑构件、门窗、柱础等弧度与规整度，
+  与“矩”配合使用，正所谓“不以规矩，不能成方圆”，是古代匠人必备的核心工具。
+</div>
+
+<!-- 曲尺 -->
+<div class="ruler-icon" id="rulerIcon"></div>
+<div class="ruler-tip" id="rulerTip">
+  曲尺简介：<br>
+  曲尺，也称角尺、鲁班尺，是古代木工常用的测量工具。<br><br>
+  主要用于校验直角、测量长度与划线，是传统木作、建筑营造中不可或缺的器具。
+</div>
+
+<!-- 四个关卡人物 -->
+<div class="people-box">
+  <div class="people-item p1" data-lv="1" data-name="计成" data-info="明代造园大师，著《园冶》，奠定中式园林营造精髓，是中国造园艺术集大成者。">
+    <img src="assets/images/character/char1.png" alt="计成">
+    
+  </div>
+  <div class="people-item p2" data-lv="2" data-name="蒯祥" data-info="明代故宫总设计师，木工泰斗，主持修建北京故宫、天安门等经典皇家建筑。">
+    <img src="assets/images/character/char2.png" alt="蒯祥">
+    
+  </div>
+  <div class="people-item p3" data-lv="3" data-name="冯胜" data-info="明初开国名将，骁勇善战，镇守辽东，为明朝统一立下赫赫战功。">
+    <img src="assets/images/character/char3.png" alt="冯胜">
+    
+  </div>
+  <div class="people-item p4" data-lv="4" data-name="徐霞客" data-info="明代地理学家、旅行家，游历三十年著成《徐霞客游记》，被称为千古奇人。">
+    <img src="assets/images/character/char4.png" alt="徐霞客">
+    
+  </div>
+</div>
+
+<script>
+const ruleBtn = document.getElementById('ruleBtn');
+const ruleModal = document.getElementById('ruleModal');
+const storyBtn = document.getElementById('storyBtn');
+const roleBtn = document.getElementById('roleBtn');
+const scrollRoleModal = document.getElementById('scrollRoleModal');
+const charTip = document.getElementById('charTip');
+const bookIcon = document.getElementById('bookIcon');
+const bookTip = document.getElementById('bookTip');
+const lubanIcon = document.getElementById('lubanIcon');
+const lubanTip = document.getElementById('lubanTip');
+const guiIcon = document.getElementById('guiIcon');
+const guiTip = document.getElementById('guiTip');
+const rulerIcon = document.getElementById('rulerIcon');
+const rulerTip = document.getElementById('rulerTip');
+const allPeople = document.querySelectorAll('.people-item');
+
+// 工具函数：关闭所有弹窗
+function closeAllModals() {
+  ruleModal.classList.remove('show');
+  scrollRoleModal.classList.remove('show');
+  charTip.classList.remove('show');
+  bookTip.classList.remove('show');
+  lubanTip.classList.remove('show');
+  guiTip.classList.remove('show');
+  rulerTip.classList.remove('show');
+  allPeople.forEach(p => p.classList.remove('active'));
+}
+
+// 规则弹窗
+ruleBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAllModals();
+  ruleModal.classList.toggle('show');
+});
+
+// 前情提要跳转
+storyBtn.addEventListener('click', () => {
+  window.location.href = 'comic.html';
+});
+
+// 人物卷轴弹窗
+roleBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAllModals();
+  scrollRoleModal.classList.toggle('show');
+});
+
+// 人物点击事件（修复双击冲突：用定时器区分单击/双击）
+allPeople.forEach(item => {
+  let clickTimer = null; // 定时器，区分单击和双击
+
+  item.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // 先清除之前的定时器（如果是双击，会先触发两次click，第一次的定时器会被清除）
+    clearTimeout(clickTimer);
+
+    // 双击判断：300ms内再次点击，判定为双击
+    clickTimer = setTimeout(() => {
+      // 单击逻辑：弹出介绍
+      closeAllModals();
+      item.classList.add('active');
+
+      const rect = item.getBoundingClientRect();
+      if (item.classList.contains('p4')) {
+        charTip.style.left = rect.left - 270 + 'px';
+        charTip.style.top = rect.top + 'px';
+      } else {
+        charTip.style.left = rect.right + 10 + 'px';
+        charTip.style.top = rect.top + 'px';
+      }
+      charTip.innerText = `${item.dataset.name}：${item.dataset.info}`;
+      charTip.classList.add('show');
+    }, 300); // 300ms内不再次点击，执行单击
+  });
+
+  // 双击事件：直接跳转，清除定时器，不执行单击
+  item.addEventListener('dblclick', (e) => {
+    e.stopPropagation();
+    clearTimeout(clickTimer); // 清除单击定时器，避免弹窗弹出
+    closeAllModals(); // 强制关闭所有弹窗，彻底解决残留问题
+    window.location.href = `level${item.dataset.lv}.html`;
+  });
+});
+
+// 园冶
+bookIcon.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAllModals();
+  bookTip.classList.toggle('show');
+});
+
+// 鲁班尺
+lubanIcon.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAllModals();
+  lubanTip.classList.toggle('show');
+});
+
+// 规
+guiIcon.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAllModals();
+  guiTip.classList.toggle('show');
+});
+
+// 曲尺
+rulerIcon.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAllModals();
+  rulerTip.classList.toggle('show');
+});
+
+// 点击空白关闭所有
+document.addEventListener('click', () => {
+  closeAllModals();
+});
+
+// 水墨鼠标
+const container = document.getElementById('mouse-effect');
+document.addEventListener('mousemove', (e) => {
+  const dot = document.createElement('div');
+  const size = Math.random() * 20 + 10;
+  dot.style.position = 'fixed';
+  dot.style.left = e.pageX - size/2 + 'px';
+  dot.style.top = e.pageY - size/2 + 'px';
+  dot.style.width = size + 'px';
+  dot.style.height = size + 'px';
+  dot.style.borderRadius = '50%';
+  dot.style.background = 'rgba(100,100,100,0.15)';
+  dot.style.pointerEvents = 'none';
+  dot.style.transition = 'all 0.8s ease';
+  container.appendChild(dot);
+  setTimeout(() => {
+    dot.style.transform = 'scale(2.5)';
+    dot.style.opacity = '0';
+    setTimeout(() => dot.remove(), 800);
+  }, 10);
+});
+</script>
+</body>
+</html>

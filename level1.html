@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拙政园问答|小楼一梦</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+    width: 100vw;
+    height: 100vh;
+    font-family: "SimSun","宋体", serif;
+    overflow: hidden;
+}
+
+/* 视频开场弹窗 - 全屏 */
+.video-popup{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    background:#000;
+    z-index:99999;
+}
+.level-video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border:none;
+}
+/* 进入关卡按钮 - 带背景框 */
+.enter-btn{
+    position:absolute;
+    bottom:30px;
+    right:40px;
+    font-family:"SimSun",宋体;
+    font-size:24px;
+    color:#fff;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #fff;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor:pointer;
+    text-shadow:0 0 5px rgba(0,0,0,0.5);
+}
+.enter-btn:hover{
+    color:#c8a96c;
+    background: rgba(0, 0, 0, 0.7);
+    border-color: #c8a96c;
+}
+
+.dialog-bg-mask {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.35);
+    z-index: 0;
+}
+
+.level-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+.dialog-area {
+    position: fixed;
+    bottom: 5%; left: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+}
+/* 增大两个小人尺寸 */
+.char-left { height: 460px; object-fit: contain; }
+.char-right { height: 420px; object-fit: contain; }
+.char-active { filter: brightness(1); }
+.char-inactive { filter: brightness(0.4) grayscale(0.5); }
+
+/* 对话框背景图片 */
+.dialog-box {
+    width: 60%; min-height: 170px;
+    position: relative;
+    z-index: 11;
+}
+.dialog-box-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: fill;
+    z-index: -1;
+}
+.dialog-content-wrap {
+    width: 100%; height: 100%;
+    padding: 20px 32px;
+    position: relative;
+}
+/* 角色名称样式 */
+.dialog-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #8c6d31;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+}
+/* 对话内容 */
+.dialog-content {
+    font-size: 21px;
+    line-height: 1.7;
+    min-height: 80px;
+}
+/* 继续按钮样式 */
+.next-btn {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    background: #c8a96c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: "SimSun","宋体", serif;
+}
+.next-btn:hover {
+    background: #a88d2b;
+}
+
+.question-box {
+    position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+    width: 76%; max-width: 780px;
+    background: rgba(255,250,240,0.98);
+    border: 4px solid #c8a96c;
+    border-radius: 18px;
+    padding: 30px;
+    text-align: center;
+    z-index: 20;
+    display: none;
+}
+/* 题目文字 - 再次调大 */
+.question-title { font-size: 32px; margin-bottom: 28px; font-weight: bold; color: #8c6d31; }
+.options { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.option {
+    width: 90%;
+    padding: 18px;
+    background: #f1e5d1;
+    border: 3px solid #c8a96c;
+    border-radius: 12px;
+    font-size: 22px;
+    cursor: pointer;
+}
+.option:hover { background: #f9e8c8; }
+/* 正确答案绿色样式 */
+.option.correct, .option.right-answer {
+    background: #e6ffe6;
+    border-color: #00b42a;
+    font-weight: bold;
+}
+.option.wrong {
+    background: #f8d7d7;
+    border-color: #dc3545;
+}
+
+.analysis {
+    margin-top: 20px;
+    padding: 16px;
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    font-size: 18px;
+    display: none;
+}
+#nextBtn {
+    margin-top: 20px;
+    padding: 12px 32px;
+    font-size: 20px;
+    background: #c8a96c;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: none;
+}
+
+/* 对错表情 - 150px */
+.face {
+    position: fixed;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    display: none;
+    pointer-events: none;
+    height: 150px;
+    width: auto;
+}
+
+.tip {
+    position: fixed;
+    right: 10%;
+    bottom: 2%;
+    color: #fff;
+    font-size: 15px;
+    text-shadow: 0 0 8px #000;
+    z-index: 11;
+    display: none;
+}
+.level-text {
+    position: fixed;
+    left: 50%;
+    bottom: 1%;
+    color: #fff;
+    font-size: 15px;
+    text-shadow: 0 0 8px #000;
+    z-index: 11;
+}
+
+.finish-popup{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width: 500px;
+    padding: 40px;
+    background: #fff8e8;
+    border: 4px solid #c8a96c;
+    border-radius:20px;
+    text-align:center;
+    z-index:9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    display: none;
+}
+.finish-img{
+    width: 120px;
+    height: auto;
+    object-fit: contain;
+}
+.finish-right{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+.finish-txt{font-size:24px;color:#8c6d31;font-weight:bold;}
+.home-btn{
+    padding:12px 30px;
+    background:#c8a96c;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+}
+.home-btn:hover{background:#b8995c;}
+
+/* 知识点总结弹窗 */
+.knowledge-popup{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 40px;
+    background: #fff8e8;
+    border: 4px solid #c8a96c;
+    border-radius:20px;
+    z-index:10000;
+    display: none;
+}
+.knowledge-title{
+    font-size:28px;
+    color:#8c6d31;
+    font-weight:bold;
+    text-align:center;
+    margin-bottom:25px;
+    padding-bottom:15px;
+    border-bottom:2px solid #c8a96c;
+}
+/* 弹窗内容布局 */
+.knowledge-wrapper{
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+.knowledge-img{
+    width: 280px;
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid #c8a96c;
+}
+.knowledge-content{
+    flex: 1;
+    font-size:18px;
+    line-height:1.8;
+    color:#333;
+}
+.knowledge-content h3{
+    font-size:22px;
+    color:#8c6d31;
+    margin:0 0 12px;
+    padding-left:8px;
+    border-left:4px solid #c8a96c;
+}
+.knowledge-content p{
+    margin-bottom:8px;
+}
+.close-btn{
+    margin-top:30px;
+    padding:12px 30px;
+    background:#c8a96c;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
+}
+.close-btn:hover{background:#b8995c;}
+</style>
+
+<body>
+<!-- 关卡开场全屏视频 -->
+<div class="video-popup" id="videoPop">
+    <video class="level-video" id="levelVideo" autoplay muted loop>
+        <source src="assets/animations/level1b.mp4" type="video/mp4">
+        您的浏览器不支持视频播放
+    </video>
+    <button class="enter-btn" onclick="enterLevel()">＞＞进入关卡</button>
+</div>
+
+<img src="assets/images/level1-bg.jpg" class="level-bg">
+<div class="dialog-bg-mask" id="dialogMask"></div>
+
+<img src="assets/images/L1-right.PNG" class="face" id="faceRight">
+<img src="assets/images/L1-wrong.PNG" class="face" id="faceWrong">
+
+<div class="dialog-area" id="dialogArea">
+    <img src="assets/images/char-left.PNG" class="char-left char-active" id="charLeft">
+    <div class="dialog-box">
+        <!-- 对话框背景图片 -->
+        <img src="assets/images/say.png" class="dialog-box-bg">
+        <div class="dialog-content-wrap">
+            <div class="dialog-name" id="speakerName"></div>
+            <div class="dialog-content" id="dialogContent"></div>
+        </div>
+        <button class="next-btn" id="continueBtn" onclick="handleClick()">继续</button>
+    </div>
+    <img src="assets/images/char-right.PNG" class="char-right char-inactive" id="charRight">
+</div>
+
+<div class="question-box" id="questionBox">
+    <div class="question-title" id="questionTitle"></div>
+    <div class="options" id="options"></div>
+    <div class="analysis" id="analysis"></div>
+    <button id="nextBtn" onclick="nextQuestion()">下一题</button>
+</div>
+
+<div class="finish-popup" id="finishPop">
+    <img src="assets/images/c1s.png" class="finish-img">
+    <div class="finish-right">
+        <div class="finish-txt">恭喜小友，圆满答完所有问题！</div>
+        <button class="home-btn" onclick="showKnowledge()">重温知识</button>
+    </div>
+</div>
+
+<!-- 知识点总结弹窗 -->
+<div class="knowledge-popup" id="knowledgePop">
+    <div class="knowledge-title">关卡一 · 拙政园知识点总结</div>
+    <div class="knowledge-wrapper">
+        <img src="assets/images/totall1.png" class="knowledge-img" alt="拙政园总结图">
+        <div class="knowledge-content">
+            <h3>一、核心考点</h3>
+            <p>1. 拙政园位于苏州，是中国四大名园之一。</p>
+            <p>2. 《园冶》核心理念：虽由人作，宛自天开。</p>
+            <p>3. 苏州四大名园：拙政园、留园、狮子林、沧浪亭。</p>
+            <p>4. 与谁同坐轩为扇形亭，取自苏轼词句。</p>
+
+            <h3>二、园林概况</h3>
+            <p>拙政园为明代始建，以水为核心，是江南古典园林与明清古建筑的杰出代表。</p>
+        </div>
+    </div>
+    <button class="close-btn" onclick="goHome()">返回主页</button>
+</div>
+
+<div class="tip">点击继续对话</div>
+<div class="level-text" id="levelText">第一关 · 拙政园</div>
+
+<script>
+const dialogue = [
+    { side: "left", name: "计成", text: "小友你好，吾乃计成，平生醉心造园之道，著有《园冶》一书。今日便与你探讨拙政园的园林妙趣，可要细心应答呀。" },
+    { side: "right", name: "小楼", text: "先生好！小楼久闻拙政园乃江南名园翘楚，一直心向往之，今日能得先生指点，实在荣幸。" },
+    { side: "left", name: "计成", text: "甚好。拙政园以水为魂，亭台轩榭皆依自然而建，处处藏着造园的大智慧，我们便从基础常识开始吧。" },
+    { side: "right", name: "小楼", text: "多谢先生！小楼已经准备就绪，还请先生出题考验。" }
+];
+
+const questions = [
+    {q:"拙政园位于哪座城市？",o:["苏州","杭州","扬州","南京"],a:0,ana:"解析：拙政园坐落于苏州，是中国四大名园之一，以水为核心，意境清幽。"},
+    {q:"《园冶》的核心造园思想是？",o:["虽由人作，宛自天开","天人合一","道法自然","仁者乐山"],a:0,ana:"解析：“虽由人作，宛自天开”是《园冶》的核心，强调园林人工营造，却要如同自然天成，不露斧凿痕迹。"},
+    {q:"下列哪座园林不属于苏州四大名园？",o:["瞻园","留园","狮子林","沧浪亭"],a:0,ana:"解析：瞻园地处南京，苏州四大名园为拙政园、留园、狮子林、沧浪亭。"},
+    {q:"拙政园“与谁同坐轩”的建筑形制是？",o:["扇形亭","方形轩","圆形榭","六角亭"],a:0,ana:"解析：与谁同坐轩为扇形小轩，取意苏轼词句意境，造型别致。"}
+];
+
+const correctReplies = [
+    [
+        { side: "left", name: "计成", text: "答得精准，拙政园正是苏州园林的巅峰之作。" },
+        { side: "right", name: "小楼", text: "太好了！看来我平日的功课没有白费。" }
+    ],
+    [
+        { side: "left", name: "计成", text: "不错不错，能领悟此道，可见你对古建园林颇有心得。" },
+        { side: "right", name: "小楼", text: "先生过奖了，皆是先生教导有方，园林文化果真博大精深。" }
+    ],
+    [
+        { side: "left", name: "计成", text: "眼光独到，瞻园地处金陵，与苏州园林不可混为一谈。" },
+        { side: "right", name: "小楼", text: "记下了！以后再遇到各类名园，定能准确分辨。" }
+    ],
+    [
+        { side: "left", name: "计成", text: "完全正确，此扇形小轩依山傍水，乃是点睛之笔。" },
+        { side: "right", name: "小楼", text: "古人的造园匠心实在精妙，每一处设计都饱含诗意。" }
+    ]
+];
+
+const wrongReplies = [
+    [
+        { side: "left", name: "计成", text: "不妨再想想，江南水乡之中，哪座城以园林闻名天下？" },
+        { side: "right", name: "小楼", text: "我再仔细想想，多谢先生耐心指引。" }
+    ],
+    [
+        { side: "left", name: "计成", text: "造园之道，贵在师法自然，再细细思索书中真意。" },
+        { side: "right", name: "小楼", text: "我明白了，原来是我理解得不够透彻。" }
+    ],
+    [
+        { side: "left", name: "计成", text: "苏州四大名园各有风韵，可别把金陵名园也归到其中啦。" },
+        { side: "right", name: "小楼", text: "原来是这样，我这就纠正这个认知误区。" }
+    ],
+    [
+        { side: "left", name: "计成", text: "此轩依窗而望，形制如扇，方合风月无边之意，再猜猜看。" },
+        { side: "right", name: "小楼", text: "我懂了，这般设计果然藏着文人雅趣。" }
+    ]
+];
+
+let dialogIdx = 0, qIndex = 0;
+let currentReply = [], replyIdx = 0, isAnswered = false;
+let isTyping = false;
+
+const charLeft = document.getElementById("charLeft");
+const charRight = document.getElementById("charRight");
+const speakerName = document.getElementById("speakerName");
+const dialogContent = document.getElementById("dialogContent");
+const questionBox = document.getElementById("questionBox");
+const options = document.getElementById("options");
+const analysis = document.getElementById("analysis");
+const nextBtn = document.getElementById("nextBtn");
+const dialogMask = document.getElementById("dialogMask");
+const finishPop = document.getElementById("finishPop");
+const knowledgePop = document.getElementById("knowledgePop");
+const faceRight = document.getElementById("faceRight");
+const faceWrong = document.getElementById("faceWrong");
+const continueBtn = document.getElementById("continueBtn");
+const dialogArea = document.getElementById("dialogArea");
+const videoPop = document.getElementById("videoPop");
+const levelVideo = document.getElementById("levelVideo");
+
+// 进入关卡，关闭视频弹窗
+function enterLevel() {
+    videoPop.style.display = "none";
+    levelVideo.pause();
+}
+
+function typeText(element, text, index = 0, speed = 50) {
+    isTyping = true;
+    continueBtn.style.display = "none";
+    if (index < text.length) {
+        element.innerHTML = text.substring(0, index + 1);
+        setTimeout(() => typeText(element, text, index + 1, speed), speed);
+    } else {
+        isTyping = false;
+        continueBtn.style.display = "block";
+    }
+}
+
+function showDialog(d) {
+    speakerName.innerText = d.name;
+    dialogContent.innerText = "";
+    typeText(dialogContent, d.text);
+
+    charLeft.className = d.side === "left" ? "char-left char-active" : "char-left char-inactive";
+    charRight.className = d.side === "right" ? "char-right char-active" : "char-right char-inactive";
+}
+
+showDialog(dialogue[dialogIdx]);
+
+function handleClick() {
+    if (isTyping) return;
+
+    if (isAnswered && replyIdx < currentReply.length) {
+        showDialog(currentReply[replyIdx]);
+        replyIdx++;
+    } else if (dialogIdx < dialogue.length - 1) {
+        dialogIdx++;
+        showDialog(dialogue[dialogIdx]);
+    } else {
+        continueBtn.style.display = "none";
+        dialogMask.style.opacity = "0";
+        questionBox.style.display = "block";
+        showQuestion();
+        document.querySelector('.tip').innerText = "请选择答案";
+    }
+}
+
+function showQuestion() {
+    const q = questions[qIndex];
+    document.getElementById("questionTitle").innerText = `第${qIndex+1}题：${q.q}`;
+    options.innerHTML = "";
+    analysis.style.display = "none";
+    nextBtn.style.display = "none";
+    isAnswered = false;
+
+    q.o.forEach((txt, i) => {
+        let div = document.createElement("div");
+        div.className = "option";
+        div.innerText = txt;
+        div.onclick = () => checkAnswer(i);
+        options.appendChild(div);
+    });
+}
+
+function checkAnswer(idx) {
+    if (isAnswered || isTyping) return;
+    isAnswered = true;
+
+    let q = questions[qIndex];
+    let optList = document.querySelectorAll(".option");
+    
+    // 标记正确答案为绿色
+    optList[q.a].classList.add("right-answer");
+
+    if (idx === q.a) {
+        optList[idx].classList.add("correct");
+        faceRight.style.display = "block";
+        setTimeout(() => faceRight.style.display = "none", 600);
+        currentReply = correctReplies[qIndex];
+    } else {
+        optList[idx].classList.add("wrong");
+        faceWrong.style.display = "block";
+        setTimeout(() => faceWrong.style.display = "none", 600);
+        currentReply = wrongReplies[qIndex];
+    }
+
+    analysis.innerText = q.ana;
+    analysis.style.display = "block";
+    nextBtn.style.display = "inline-block";
+    replyIdx = 0;
+    showDialog(currentReply[replyIdx]);
+    replyIdx++;
+}
+
+function nextQuestion() {
+    faceRight.style.display = "none";
+    faceWrong.style.display = "none";
+    qIndex++;
+
+    if (qIndex >= questions.length) {
+        questionBox.style.display = "none";
+        // 通关时隐藏对话框和人物
+        dialogArea.style.display = "none";
+        finishPop.style.display = "flex";
+        return;
+    }
+
+    showQuestion();
+}
+
+// 显示知识点总结弹窗
+function showKnowledge() {
+    knowledgePop.style.display = "block";
+}
+
+// 跳转到game.html
+function goHome() {
+    window.location.href = "game.html";
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>关卡三 - 榫卯古建消消乐</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    font-family: "SimSun","宋体",serif;
+    background:#000;
+}
+
+/* 视频全屏容器 */
+.video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity:1;
+    transition:opacity 0.4s ease-out;
+}
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* 进入关卡按钮 */
+.enter-level-btn {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    background: #8b5a2b;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 10000;
+    transition: background 0.3s;
+}
+.enter-level-btn:hover {
+    background: #a67c52;
+}
+
+/* 游戏主内容默认隐藏 */
+.game-content {
+    opacity: 0;
+    transition: opacity 0.8s ease-out 0.2s;
+}
+
+/* 背景 + 暗化遮罩 */
+.bg-mask{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:url(assets/images/level3-bg.jpg) center/cover no-repeat;
+    z-index:0;
+}
+.overlay-dark{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.55);
+    z-index:1;
+}
+
+/* 人物位置 - 左侧继续左移 */
+.char-left { 
+    height: 460px; 
+    object-fit: contain; 
+    left: 1%; 
+    position:absolute; 
+    bottom:8%; 
+    transition:all 0.4s; 
+    z-index:5; 
+}
+.char-right { 
+    height: 420px; 
+    object-fit: contain; 
+    right: 5%; 
+    position:absolute; 
+    bottom:8%; 
+    transition:all 0.4s; 
+    z-index:5; 
+}
+.char-active { filter: brightness(1); }
+.char-inactive { filter: brightness(0.4) grayscale(0.5); }
+
+/* 对话框结构 */
+.dialog-box {
+    width: 60%; 
+    min-height: 170px;
+    position: fixed; 
+    bottom:8%; 
+    left:50%; 
+    transform:translateX(-50%);
+    z-index: 11;
+}
+.dialog-box-bg {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    object-fit: fill;
+    z-index: -1;
+}
+.dialog-content-wrap {
+    width: 100%; 
+    height: 100%;
+    padding: 20px 32px;
+    position: relative;
+}
+.character-name{
+    font-size:24px;
+    font-weight:bold;
+    color:#5a3820;
+    margin-bottom:10px;
+    font-family:"宋体";
+}
+.dialog-text{
+    font-size:22px;
+    line-height:1.6;
+    color:#2c1a0a;
+    margin-bottom:10px;
+    font-family:"宋体";
+}
+/* 继续按钮 */
+.continue-btn{
+    position: absolute; 
+    bottom:15px; 
+    right:20px;
+    background:#d4b886;
+    border:none;
+    color:#fff;
+    padding:6px 14px;
+    font-size:16px;
+    cursor:pointer;
+    font-family:"宋体";
+    border-radius:6px;
+}
+.continue-btn:hover{background:#b8995c;}
+
+/* 游戏信息 */
+.game-info{
+    position:absolute;
+    top:20px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:50px;
+    z-index:15;
+    display:none;
+}
+.info-item{
+    color:#fff;
+    font-size:24px;
+    background:rgba(0,0,0,0.6);
+    padding:10px 25px;
+    border:2px solid #d4b886;
+    border-radius:8px;
+}
+
+/* 消消乐外框 */
+.game-box{
+    position:absolute;
+    top:48%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:620px;
+    height:560px;
+    background:#f8f0e3;
+    border:6px solid #a67c52;
+    border-radius:20px;
+    padding:30px 25px 25px;
+    text-align:center;
+    display:none;
+    z-index:6;
+    box-shadow:0 10px 10px rgba(0,0,0,0.2);
+}
+
+.game-title{
+    color:#5a3822;
+    font-size:28px;
+    margin-bottom:25px;
+    font-family:"宋体",serif;
+    text-shadow:1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 16宫格 */
+.card-container{
+    display:grid;
+    grid-template-columns:repeat(4,100px);
+    grid-template-rows:repeat(4,100px);
+    gap:10px;
+    justify-content:center;
+    margin:0 auto;
+}
+
+.item{
+    width:100px;
+    height:100px;
+    border:3px solid #a67c52;
+    border-radius:10px;
+    background-size:contain;
+    background-position:center;
+    background-repeat:no-repeat;
+    background-color:#fff;
+    cursor:pointer;
+    transition:0.3s;
+}
+.item:hover{transform:scale(1.06);box-shadow:0 0 18px #ffd700;}
+.item.hidden{visibility:hidden;}
+.item.selected{border-color:#ffd700;box-shadow:0 0 22px #ffd700;}
+
+/* 弹窗 */
+.modal{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:700px;
+    background:#f5f0e6;
+    border:4px solid #8b5a2b;
+    border-radius:16px;
+    padding:30px;
+    z-index:100;
+    display:none;
+}
+.modal-content {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+.modal-text {
+    flex: 1;
+    text-align: left;
+}
+.modal p{font-size:22px;line-height:1.9;margin-bottom:15px;color:#2c1a0a;}
+.modal .btn{
+    padding:12px 30px;
+    background:#8b5a2b;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:20px;
+    cursor:pointer;
+    margin-top:10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 结果弹窗头像 */
+.result-face {
+    width: 240px;
+    height: auto;
+}
+
+/* 知识总结弹窗 */
+.knowledge-modal {
+    width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.knowledge-flex {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+.knowledge-img {
+    width: 300px;
+    height: auto;
+    border-radius: 8px;
+}
+.knowledge-right {
+    flex: 1;
+}
+.knowledge-title {
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #8b5a2b;
+}
+.knowledge-section {
+    margin-bottom: 15px;
+}
+.knowledge-section h3 {
+    font-size: 22px;
+    color: #5a3820;
+    margin-bottom: 8px;
+}
+.knowledge-section p {
+    font-size: 19px;
+    line-height: 1.6;
+    color: #2c1a0a;
+}
+.btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<!-- 视频播放层 -->
+<div class="video-container" id="videoContainer">
+    <video id="levelVideo" muted playsinline>
+        <source src="assets/animations/level3b.mp4" type="video/mp4">
+    </video>
+    <button class="enter-level-btn" onclick="enterGame()">＞＞ 进入关卡</button>
+</div>
+
+<!-- 游戏主内容 -->
+<div class="game-content" id="gameContent">
+    <div class="bg-mask"></div>
+    <div class="overlay-dark" id="darkMask"></div>
+
+    <!-- 左右角色 -->
+    <img src="assets/images/fengsheng.png" class="char-left char-active" id="feng">
+    <img src="assets/images/girl.png" class="char-right char-inactive" id="girl">
+
+    <!-- 对话框 -->
+    <div class="dialog-box" id="dialogBox">
+        <img src="assets/images/say.png" class="dialog-box-bg">
+        <div class="dialog-content-wrap">
+            <div class="character-name" id="charName"></div>
+            <div class="dialog-text" id="charText"></div>
+        </div>
+        <button class="continue-btn" onclick="nextDialog()">继续</button>
+    </div>
+
+    <!-- 规则弹窗 -->
+    <div class="modal" id="ruleModal">
+        <div class="modal-content">
+            <div class="modal-text">
+                <p>📜 榫卯消消乐规则</p>
+                <p>1. 点击选中一张榫或卯的卡片</p>
+                <p>2. 再点击与之对应的另一半进行配对</p>
+                <p>3. 限时100秒内完成全部配对即可通关</p>
+                <p>祝你顺利！</p>
+                <button class="btn" onclick="startGameAfterRule()">准备好了</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-info">
+        <div class="info-item">限时：<span id="time">100</span> 秒</div>
+    </div>
+
+    <div class="game-box" id="gameArea">
+        <p class="game-title">榫卯古建消消乐</p>
+        <div class="card-container" id="cardContainer"></div>
+    </div>
+
+    <!-- 通关弹窗 -->
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <img src="assets/images/c2happy.png" class="result-face">
+            <div class="modal-text">
+                <p>🎉 小友技艺不凡，顺利通关！</p>
+                <p>老夫观你榫卯配对行云流水，已然深谙古建营造之妙，着实可嘉！</p>
+                <button class="btn" onclick="showKnowledge()">重温知识</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 失败弹窗 -->
+    <div class="modal" id="loseModal">
+        <div class="modal-content">
+            <img src="assets/images/c2sad.png" class="result-face">
+            <div class="modal-text">
+                <p>⏰ 时间已尽，此番挑战未能通关。</p>
+                <p>小友不必气馁，静下心来仔细观察，重整旗鼓再来一试便是！</p>
+                <button class="btn" onclick="location.reload()">重新挑战</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 榫卯知识总结弹窗 -->
+    <div class="modal knowledge-modal" id="knowledgeModal">
+        <div class="knowledge-title">榫卯知识总结</div>
+        
+        <div class="knowledge-flex">
+            <img src="assets/images/totalsunmao.png" class="knowledge-img" alt="榫卯结构图">
+            <div class="knowledge-right">
+                <div class="knowledge-section">
+                    <h3>一、榫卯简介</h3>
+                    <p>榫卯是中国传统木作核心连接结构，构件凹凸咬合，无需钉子，稳固耐用，承载传统工艺智慧。</p>
+                </div>
+
+                <div class="knowledge-section">
+                    <h3>二、古建应用</h3>
+                    <p>1. 宫殿：如故宫，梁柱榫卯咬合，结构稳固庄严。</p>
+                    <p>2. 楼阁：应县木塔，全榫卯无钉，抗震耐久。</p>
+                    <p>3. 园林与民居：亭台、四合院常用，适配地域与审美。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="location.href='game.html'">返回主页</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 视频与进入关卡
+const videoContainer = document.getElementById('videoContainer');
+const gameContent = document.getElementById('gameContent');
+const levelVideo = document.getElementById('levelVideo');
+const darkMask = document.getElementById('darkMask');
+
+// 页面加载自动播放视频
+document.addEventListener('DOMContentLoaded', function() {
+    // 自动播放视频，兼容浏览器限制
+    levelVideo.play().catch(err => {
+        console.log('视频自动播放受限，可点击播放:', err);
+    });
+});
+
+// 点击进入关卡 - 平滑过渡
+function enterGame() {
+    // 视频层淡出
+    videoContainer.style.opacity = '0';
+    setTimeout(() => {
+        videoContainer.style.display = 'none';
+        // 游戏内容淡入
+        gameContent.style.opacity = '1';
+        darkMask.style.display = 'block';
+        nextDialog();
+    }, 400);
+}
+
+// 对话数据
+const dialogData = [
+    { side: "left", name: "冯胜", text: "古建能屹立千年不倒，不靠一钉一铆，全靠精巧咬合。" },
+    { side: "right", name: "小楼", text: "这便是榫卯工艺，凸为榫、凹为卯，两两相合便能稳固相连。" },
+    { side: "left", name: "冯胜", text: "你试着把相同的榫卯结构配对，读懂古建的匠心吧。" }
+];
+
+const charName = document.getElementById('charName');
+const charText = document.getElementById('charText');
+const feng = document.getElementById('feng');
+const girl = document.getElementById('girl');
+const gameArea = document.getElementById('gameArea');
+const gameInfo = document.querySelector('.game-info');
+const ruleModal = document.getElementById('ruleModal');
+const dialogBox = document.getElementById('dialogBox');
+const winModal = document.getElementById('winModal');
+const loseModal = document.getElementById('loseModal');
+const knowledgeModal = document.getElementById('knowledgeModal');
+
+let index = 0;
+let typingTimer = null;
+let isTyping = false;
+
+// 打字机效果
+function typeText(el, txt, speed = 60) {
+    isTyping = true;
+    el.textContent = '';
+    clearInterval(typingTimer);
+    let i = 0;
+    typingTimer = setInterval(() => {
+        if(i < txt.length) {
+            el.textContent += txt.charAt(i++);
+        } else {
+            clearInterval(typingTimer);
+            isTyping = false;
+        }
+    }, speed);
+}
+
+// 切换对话
+function nextDialog(){
+    if(isTyping) return;
+
+    if(index >= dialogData.length){
+        clearInterval(typingTimer);
+        ruleModal.style.display = 'block';
+        return;
+    }
+
+    charName.textContent = dialogData[index].name;
+    typeText(charText, dialogData[index].text);
+
+    if(dialogData[index].side === "left"){
+        feng.className = "char-left char-active";
+        girl.className = "char-right char-inactive";
+    }else{
+        feng.className = "char-left char-inactive";
+        girl.className = "char-right char-active";
+    }
+
+    index++;
+}
+
+// 显示知识弹窗
+function showKnowledge() {
+    winModal.style.display = 'none';
+    knowledgeModal.style.display = 'block';
+}
+
+// 开始游戏：点击准备好了后，隐藏对话框和遮罩，显示消消乐，两个小人都亮
+function startGameAfterRule(){
+    ruleModal.style.display = 'none';
+    darkMask.style.display = 'none';
+    dialogBox.style.display = 'none';
+    // 消消乐界面两个小人都亮
+    feng.className = "char-left char-active";
+    girl.className = "char-right char-active";
+
+    gameArea.style.display = 'block';
+    gameInfo.style.display = 'flex';
+    startGame();
+}
+
+// 消消乐逻辑
+let time=100, timer, selected=null, matched=0;
+const totalPairs = 8;
+
+const allItems = [
+    {type:"p1", img:"assets/images/sun1.png"},{type:"p1", img:"assets/images/mao1.png"},
+    {type:"p2", img:"assets/images/sun2.png"},{type:"p2", img:"assets/images/mao2.png"},
+    {type:"p3", img:"assets/images/sun3.png"},{type:"p3", img:"assets/images/mao3.png"},
+    {type:"p4", img:"assets/images/sun4.png"},{type:"p4", img:"assets/images/mao4.png"},
+    {type:"p5", img:"assets/images/sun5.png"},{type:"p5", img:"assets/images/mao5.png"},
+    {type:"p6", img:"assets/images/sun6.png"},{type:"p6", img:"assets/images/mao6.png"},
+    {type:"p7", img:"assets/images/sun7.png"},{type:"p7", img:"assets/images/mao7.png"},
+    {type:"p8", img:"assets/images/sun8.png"},{type:"p8", img:"assets/images/mao8.png"}
+];
+
+function shuffle(arr){
+    let a=[...arr];
+    for(let i=a.length-1;i>0;i--){
+        let j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+}
+
+function startGame(){
+    const shuffled = shuffle(allItems);
+    const container = document.getElementById('cardContainer');
+    container.innerHTML='';
+
+    shuffled.forEach(item=>{
+        let div=document.createElement('div');
+        div.className='item';
+        div.dataset.type=item.type;
+        div.style.backgroundImage=`url(${item.img})`;
+        container.appendChild(div);
+    });
+
+    timer = setInterval(()=>{
+        time--;
+        document.getElementById('time').innerText = time;
+        if(time <= 0){
+            clearInterval(timer);
+            // 隐藏游戏和小人
+            gameArea.style.display = 'none';
+            gameInfo.style.display = 'none';
+            feng.style.display = 'none';
+            girl.style.display = 'none';
+            loseModal.style.display = 'block';
+        }
+    }, 1000);
+
+    document.querySelectorAll('.item').forEach(i=>{
+        i.addEventListener('click',()=>{
+            if(i.classList.contains('hidden') || time<=0) return;
+
+            if(!selected){
+                selected = i;
+                i.classList.add('selected');
+                return;
+            }
+
+            let a=selected, b=i;
+            if(a.dataset.type === b.dataset.type && a!==b){
+                a.classList.add('hidden');
+                b.classList.add('hidden');
+                matched++;
+
+                if(matched === totalPairs){
+                    clearInterval(timer);
+                    // 隐藏游戏和小人
+                    gameArea.style.display = 'none';
+                    gameInfo.style.display = 'none';
+                    feng.style.display = 'none';
+                    girl.style.display = 'none';
+                    winModal.style.display = 'block';
+                }
+            }
+
+            a.classList.remove('selected');
+            selected = null;
+        });
+    });
+}
+</script>
+</body>
+</html>

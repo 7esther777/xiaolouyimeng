@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>调配古法糯米灰浆</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;font-family:"SimSun","宋体",serif;}
+
+/* 视频全屏容器 */
+.video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* 进入关卡按钮 */
+.enter-level-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 10px 22px;
+    background: rgba(168, 106, 60, 0.85);
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 6px;
+    font-family: "SimSun","宋体";
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 100001;
+    transition: all 0.3s ease;
+}
+.enter-level-btn:hover {
+    background: #92400e;
+    transform: scale(1.05);
+}
+
+body{
+    background: url("assets/images/level2-bg.png") no-repeat center center;
+    background-size: cover;
+    min-height: 100vh;
+    color:#333;
+    overflow-x:hidden;
+    filter: brightness(1.08);
+    transition: filter 0.8s ease;
+}
+body.game-bright-normal{
+    filter: brightness(1);
+}
+
+.dialog-mask{
+    position:fixed;top:0;left:0;width:100vw;height:100vh;
+    background:rgba(0,0,0,0.35);
+    z-index:9999;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    padding-bottom: 40px;
+}
+.talk-wrap{
+    display:flex;
+    align-items:flex-end;
+    gap: 15px;
+    position: relative;
+}
+
+/* 对话框左侧人物继续加大 */
+.img-char-left{
+    width: 380px;
+    height:auto;
+    transition:all 0.4s ease;
+    opacity: 0.6;
+    transform:scale(1);
+    filter: none;
+    margin-bottom: 10px;
+}
+/* 右侧人物稍小 */
+.img-char-right{
+    width: 300px;
+    height:auto;
+    transition:all 0.4s ease;
+    opacity: 0.6;
+    transform:scale(1);
+    filter: none;
+    margin-bottom: 10px;
+}
+.img-char-left.active, .img-char-right.active{
+    opacity: 1;
+    transform:scale(1.02);
+}
+
+/* 对话框样式 */
+.talk-box{
+    width: 800px;
+    height: 160px;
+    background: url("assets/images/say.png") no-repeat center center;
+    background-size: 100% 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 20px 30px;
+    font-size: 18px;
+    line-height: 1.6;
+    text-align: left;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+    color: #000;
+}
+.name-title{
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 10px;
+}
+.dialog-content{
+    font-size: 18px;
+    line-height: 1.6;
+    color: #000;
+}
+
+.continue-btn {
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
+    padding: 6px 15px;
+    background: #d4b28c;
+    color: #3a2e2b;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 卷轴固定尺寸 */
+.game-main{
+    width: 1100px;
+    height: 780px;
+    margin:20px auto;
+    background: url("assets/images/scroll2.png") no-repeat center center;
+    background-size: 1100px 780px;
+    border: none;
+    border-radius: 0;
+    padding: 100px 70px;
+    box-shadow: none;
+    display: none;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.game-main.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.materials{
+    display:flex;
+    justify-content:center;
+    gap: 50px;
+    flex-wrap:wrap;
+    margin: 100px 0 80px 0;
+}
+.mat{
+    width: auto;
+    height: auto;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    flex-direction:column;
+    justify-content:center;
+}
+.mat:hover{ transform:scale(1.05); }
+.mat.selected{
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: scale(1) !important;
+}
+
+.mat-icon{
+    width:90px;
+    height:90px;
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+}
+.i-shi{background-image:url("assets/images/mat-shi.png");}
+.i-tu{background-image:url("assets/images/mat-tu.png");}
+.i-nuo{background-image:url("assets/images/mat-nuo.png");}
+.i-shui{background-image:url("assets/images/mat-shui.png");}
+.i-sha{background-image:url("assets/images/mat-sha.png");}
+
+.mat div{
+    font-size:16px;
+    color:#333;
+    font-weight:60;
+    text-align:center;
+    margin-top: 8px;
+}
+
+.bowl-area{
+    width:300px;
+    height:220px;
+    margin:0 auto 40px auto;
+    position:relative;
+}
+@keyframes bowlShake {
+    0%{transform: translateX(-50%) rotate(-3deg);}
+    50%{transform: translateX(-50%) rotate(3deg);}
+    100%{transform: translateX(-50%) rotate(-3deg);}
+}
+.shaking{ animation: bowlShake 0.3s linear infinite; }
+.bowl-base{
+    width:100%;
+    height:100%;
+    background-repeat:no-repeat;
+    background-position:center bottom;
+    background-size:contain;
+    position:absolute;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:8;
+}
+.bowl-fill{
+    width:100%;
+    height:100%;
+    background-repeat:no-repeat;
+    background-position:center bottom;
+    background-size:contain;
+    position:absolute;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:9;
+    opacity:0;
+    transition:opacity 0.8s ease;
+}
+
+.btn-group{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin:0 0 25px 0;
+}
+.btn{
+    padding:14px 36px;
+    font-size:17px;
+    font-family:"SimSun","宋体",serif;
+    background:linear-gradient(145deg,#92400e,#a86a3c);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    transition:all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn:hover{
+    background:linear-gradient(145deg,#a86a3c,#92400e);
+    transform:translateY(-2px);
+}
+.btn:active{transform:translateY(0);}
+
+.btn-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+#backHomeBtn{
+    display:none;
+    margin:20px auto 0;
+}
+#hintText{
+    margin-top:10px;
+    font-size:17px;
+    color:#d32f2f;
+    text-align:center;
+    line-height:1.6;
+}
+.success{
+    color:#16a34a;
+    font-weight:bold;
+    font-size:19px;
+}
+
+.fly-item {
+    position: fixed;
+    width: 40px;
+    height:40px;
+    background-size: contain;
+    background-repeat:no-repeat;
+    background-position:center;
+    pointer-events: none;
+    z-index: 999;
+    transition: all 0.6s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.success-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width:100vw;
+    height:100vh;
+    background: rgba(255,255,255,0);
+    z-index: 99998;
+    pointer-events: none;
+}
+.success-flash.active{animation: goldenFlash 0.7s ease forwards;}
+@keyframes goldenFlash{
+    0%{opacity:0;}
+    50%{opacity:0.2;}
+    100%{opacity:0;}
+}
+
+/* 成功弹窗全屏容器 */
+.success-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url("assets/images/level2-bg.png") no-repeat center center;
+    background-size: cover;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+/* 弹窗内容框 */
+.popup-box {
+    width: 700px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 3px solid #92400e;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    text-align: center;
+}
+.popup-content {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+.kuaixiang-img {
+    width: 180px;
+    height: auto;
+    border-radius: 8px;
+}
+.popup-text {
+    font-size: 22px;
+    line-height: 1.8;
+    color: #333;
+    max-width: 500px;
+}
+/* 按钮居中 */
+.knowledge-btn {
+    padding: 8px 20px;
+    background: #a86a3c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: inline-block;
+}
+.knowledge-btn:hover {
+    background: #92400e;
+}
+
+/* 知识点面板全屏容器 */
+.knowledge-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url("assets/images/level2-bg.png") no-repeat center center;
+    background-size: cover;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+/* 知识点内容框 */
+.knowledge-box {
+    width: 900px;
+    padding: 50px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 3px solid #92400e;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    text-align: center;
+}
+.knowledge-title {
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #92400e;
+    text-align: center;
+}
+/* 知识点图文布局 */
+.knowledge-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    margin-bottom: 40px;
+    text-align: left;
+}
+.knowledge-img {
+    width: 280px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.knowledge-content {
+    flex: 1;
+    font-size: 18px;
+    line-height: 2;
+    color: #333;
+}
+/* 按钮居中 */
+.panel-home-btn {
+    padding: 8px 20px;
+    background: #a86a3c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: inline-block;
+}
+.panel-home-btn:hover {
+    background: #92400e;
+}
+</style>
+</head>
+<body>
+
+<!-- 开场全屏视频 -->
+<div class="video-container" id="videoContainer">
+    <video src="assets/animations/level2b.mp4" autoplay muted loop playsinline></video>
+    <button class="enter-level-btn" id="enterLevelBtn">＞＞进入关卡</button>
+</div>
+
+<div class="success-flash" id="successFlash"></div>
+
+<!-- 对话弹窗 -->
+<div class="dialog-mask">
+    <div class="talk-wrap">
+        <img src="assets/images/kuaixiang.png" class="img-char-left" id="kuaixiangImg">
+        <div class="talk-box">
+            <div class="name-title" id="nameTitle">蒯祥</div>
+            <div class="dialog-content" id="dialogContent"></div>
+            <button class="continue-btn">继续</button>
+        </div>
+        <img src="assets/images/char-right.png" class="img-char-right" id="girlImg">
+    </div>
+</div>
+
+<!-- 游戏主界面 -->
+<div class="game-main" id="gameBox">
+    <div class="materials">
+        <div class="mat" data-name="石灰" data-icon="mat-shi">
+            <div class="mat-icon i-shi"></div>
+            <div>精研石灰</div>
+        </div>
+        <div class="mat" data-name="黄土" data-icon="mat-tu">
+            <div class="mat-icon i-tu"></div>
+            <div>深层黄土</div>
+        </div>
+        <div class="mat" data-name="糯米汁" data-icon="mat-nuo">
+            <div class="mat-icon i-nuo"></div>
+            <div>浓糯米浆</div>
+        </div>
+        <div class="mat" data-name="水泥" data-icon="mat-shui">
+            <div class="mat-icon i-shui"></div>
+            <div>现代水泥</div>
+        </div>
+        <div class="mat" data-name="沙子" data-icon="mat-sha">
+            <div class="mat-icon i-sha"></div>
+            <div>细润河沙</div>
+        </div>
+    </div>
+    <div class="bowl-area">
+        <div class="bowl-base" id="bowlEmpty"></div>
+        <div class="bowl-fill" id="bowlFill"></div>
+    </div>
+    <div class="btn-group">
+        <button class="btn" id="startStirBtn">
+            <img src="assets/images/mix.png" class="btn-icon" alt="搅拌">
+            搅拌
+        </button>
+        <button class="btn" id="resetAllBtn">
+            <img src="assets/images/return.png" class="btn-icon" alt="重置">
+            重置
+        </button>
+    </div>
+    <button class="btn" id="backHomeBtn">点击返回主页</button>
+    <div id="hintText">请挑选正宗古法原料，调配千年不腐灰浆</div>
+</div>
+
+<!-- 搅拌成功弹窗 -->
+<div class="success-popup" id="successPopup">
+    <div class="popup-box">
+        <div class="popup-content">
+            <img src="assets/images/c2h.png" class="kuaixiang-img" alt="蒯祥">
+            <div class="popup-text">
+                恭喜小友！你已成功配制出古法糯米灰浆，此乃古建筑营造之中极为关键的技艺，老夫甚是欣慰！
+            </div>
+        </div>
+        <button class="knowledge-btn" id="showKnowledgeBtn">重温知识</button>
+    </div>
+</div>
+
+<!-- 古建知识点面板 -->
+<div class="knowledge-panel" id="knowledgePanel">
+    <div class="knowledge-box">
+        <div class="knowledge-title">关卡二·古法糯米灰浆知识点总结</div>
+        <div class="knowledge-wrapper">
+            <img src="assets/images/totallevel2.png" class="knowledge-img" alt="知识点图示">
+            <div class="knowledge-content">
+                1. 糯米灰浆为古代独创建筑胶凝材料，由石灰、糯米汁、黄土配比制成，黏性与耐久性极佳。<br>
+                2. 广泛用于长城、故宫等古建筑砌筑勾缝，历经数百年仍坚固稳定。<br>
+                3. 核心原理是糯米淀粉与石灰发生反应，形成致密结构，提升强度与抗渗性。<br>
+                4. 古代配料、搅拌、发酵均有严格规范，是传统工匠智慧结晶。<br>
+                5. 现代古建修复仍沿用此法，最大程度还原历史风貌与结构安全。
+            </div>
+        </div>
+        <button class="panel-home-btn" id="panelBackHomeBtn">返回主页</button>
+    </div>
+</div>
+
+<script>
+// 进入关卡按钮逻辑
+const videoContainer = document.getElementById('videoContainer');
+const enterLevelBtn = document.getElementById('enterLevelBtn');
+
+enterLevelBtn.onclick = () => {
+    videoContainer.style.display = 'none';
+};
+
+const chatList = [
+    {who:"kuai", name:"蒯祥", text:"小友你好，吾乃蒯祥，今日便教你配制古法糯米灰浆，此乃古建核心技艺。"},
+    {who:"girl", name:"小楼", text:"蒯先生，配制这灰浆都需要哪些材料，又有什么讲究呢？"},
+    {who:"kuai", name:"蒯祥", text:"需取上等石灰、洁净黄土、黏稠糯米汁，三者按比例相融，切忌混入水泥与细沙。"},
+    {who:"girl", name:"小楼", text:"原来是这样！记住了，我这就按照古法来选材调配！"}
+];
+
+let nowChat = 0;
+let isTyping = false;
+const nameTitle = document.getElementById("nameTitle");
+const dialogContent = document.getElementById("dialogContent");
+const kImg = document.getElementById("kuaixiangImg");
+const girlImg = document.getElementById("girlImg");
+const continueBtn = document.querySelector(".continue-btn");
+const gameBox = document.getElementById("gameBox");
+
+// 打字效果
+function typeText(text, callback) {
+    isTyping = true;
+    let index = 0;
+    dialogContent.innerText = "";
+    const timer = setInterval(() => {
+        dialogContent.innerText += text[index];
+        index++;
+        if(index >= text.length) {
+            clearInterval(timer);
+            isTyping = false;
+            callback && callback();
+        }
+    }, 50);
+}
+
+// 刷新对话
+function freshTalk() {
+    const data = chatList[nowChat];
+    nameTitle.innerText = data.name;
+
+    if(data.who === "kuai") {
+        kImg.classList.add("active");
+        girlImg.classList.remove("active");
+        kImg.src = "assets/images/kuaixiang.png";
+    } else {
+        girlImg.classList.add("active");
+        kImg.classList.remove("active");
+        if(nowChat === 1) {
+            girlImg.src = "assets/images/ask.png";
+        } else {
+            girlImg.src = "assets/images/char-right.png";
+        }
+    }
+
+    continueBtn.style.display = "none";
+    typeText(data.text, () => {
+        continueBtn.style.display = "block";
+    });
+}
+
+freshTalk();
+
+// 继续对话
+continueBtn.onclick = () => {
+    if(isTyping) return;
+    nowChat++;
+    if(nowChat < chatList.length) {
+        freshTalk();
+    } else {
+        document.querySelector(".dialog-mask").style.display = "none";
+        gameBox.style.display = "block";
+        setTimeout(() => {
+            gameBox.classList.add("show");
+        }, 50);
+        document.body.classList.add("game-bright-normal");
+    }
+};
+
+const bowlEmpty = document.getElementById("bowlEmpty");
+const bowlFill = document.getElementById("bowlFill");
+const successFlash = document.getElementById("successFlash");
+const backHomeBtn = document.getElementById("backHomeBtn");
+const successPopup = document.getElementById("successPopup");
+const knowledgePanel = document.getElementById("knowledgePanel");
+const showKnowledgeBtn = document.getElementById("showKnowledgeBtn");
+const panelBackHomeBtn = document.getElementById("panelBackHomeBtn");
+
+bowlEmpty.style.backgroundImage = "url(assets/images/bowl-empty.png)";
+bowlFill.style.backgroundImage = "url(assets/images/bowl-full.png)";
+
+// 返回主页
+backHomeBtn.onclick = () => {
+    document.body.style.opacity = '0';
+    setTimeout(() => {
+        window.location.href = 'game.html';
+    }, 300);
+};
+
+// 知识点面板返回主页
+panelBackHomeBtn.onclick = () => {
+    document.body.style.opacity = '0';
+    setTimeout(() => {
+        window.location.href = 'game.html';
+    }, 300);
+};
+
+// 打开知识点面板
+showKnowledgeBtn.onclick = () => {
+    successPopup.style.display = 'none';
+    knowledgePanel.style.display = 'flex';
+};
+
+let selectArr = [];
+const mats = document.querySelectorAll(".mat");
+
+// 选择材料
+mats.forEach(m => {
+    m.onclick = () => {
+        m.classList.toggle("selected");
+        const name = m.dataset.name;
+        
+        if(selectArr.includes(name)) {
+            selectArr = selectArr.filter(item => item !== name);
+        } else {
+            selectArr.push(name);
+        }
+
+        const icon = document.createElement("div");
+        icon.className = "fly-item";
+        icon.style.backgroundImage = `url(assets/images/${m.dataset.icon}.png)`;
+        
+        const rect = m.getBoundingClientRect();
+        icon.style.left = rect.left + rect.width/2 - 20 + "px";
+        icon.style.top = rect.top + rect.height/2 - 20 + "px";
+        document.body.appendChild(icon);
+
+        setTimeout(() => {
+            const bowlRect = document.querySelector(".bowl-area").getBoundingClientRect();
+            icon.style.left = bowlRect.left + bowlRect.width/2 - 20 + "px";
+            icon.style.top = bowlRect.top + bowlRect.height/2 - 20 + "px";
+            icon.style.opacity = 0;
+            icon.style.transform = "scale(0.5)";
+        }, 20);
+
+        setTimeout(() => icon.remove(), 700);
+    }
+});
+
+// 搅拌逻辑
+document.getElementById("startStirBtn").onclick = () => {
+    bowlEmpty.classList.add("shaking");
+
+    setTimeout(() => {
+        bowlEmpty.classList.remove("shaking");
+        
+        const ok = selectArr.includes("石灰") && selectArr.includes("黄土") && selectArr.includes("糯米汁") && !selectArr.includes("水泥") && !selectArr.includes("沙子");
+        if(ok) {
+            bowlFill.style.opacity = "1";
+            successFlash.classList.add("active");
+            setTimeout(() => successFlash.classList.remove("active"), 700);
+            // 延迟0.8秒显示成功弹窗，隐藏背景界面
+            setTimeout(() => {
+                gameBox.style.display = 'none';
+                successPopup.style.display = 'flex';
+            }, 800);
+        } else {
+            document.getElementById("hintText").innerText = "❌配比不对，请选择正确原料，勿加水泥与沙子！";
+        }
+    }, 2000);
+};
+
+// 重置逻辑
+document.getElementById("resetAllBtn").onclick = () => {
+    selectArr = [];
+    bowlEmpty.classList.remove("shaking");
+    bowlFill.style.opacity = "0";
+    mats.forEach(m => m.classList.remove("selected"));
+    backHomeBtn.style.display = "none";
+    document.getElementById("hintText").innerText = "请挑选正宗古法原料，调配千年不腐灰浆";
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小楼一梦 · 第四关</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+  }
+  body {
+    width: 100vw;
+    height: 100vh;
+    background: url('assets/images/level4-bg.jpg') center/cover no-repeat;
+    background-size: cover;
+    font-family: "微软雅黑", serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* 视频全屏容器 */
+  #videoContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 1.5s ease;
+  }
+  #introVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* 进入关卡按钮 */
+  #enterBtn {
+    position: fixed;
+    bottom: 40px;
+    right: 50px;
+    font-family: "SimSun", serif;
+    font-size: 24px;
+    color: #fff;
+    background: rgba(185, 138, 37, 0.8);
+    border: 2px solid #b98a25;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    z-index: 10000;
+    display: block;
+    transition: all 0.3s;
+  }
+  #enterBtn:hover {
+    background: rgba(185, 138, 37, 1);
+  }
+
+  /* 对话遮罩 */
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    transition: opacity 0.8s;
+  }
+
+  /* 人物样式 */
+  .character {
+    position: absolute;
+    bottom: 60px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    transition: opacity 0.4;
+    z-index: 10;
+  }
+  .xuxiake {
+    left: 5%;
+    width: 320px;
+    height: 580px;
+    background-image: url('assets/images/xuxiake.png');
+  }
+  .girl {
+    right: 8%;
+    width: 240px;
+    height: 400px;
+    background-image: url('assets/images/girl.png');
+  }
+
+  /* 明暗控制 */
+  .dim { opacity: 0.2; }
+  .bright { opacity: 1; }
+
+  /* 对话框 */
+  .dialog-box {
+    width: 85%;
+    max-width: 880px;
+    height: 180px;
+    background: url('assets/images/say.png') center/cover no-repeat;
+    border: none;
+    border-radius: 14px;
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 24px 36px;
+    z-index: 99;
+  }
+  /* 角色名称 */
+  .speaker-name {
+    font-size: 22px;
+    color: #b98a25;
+    margin-bottom: 12px;
+    font-family: "SimSun", serif;
+  }
+  .dialog-text {
+    font-size: 18px;
+    color: #333;
+    line-height: 1.8;
+    min-height: 60px;
+    font-family: "SimSun", serif;
+  }
+  .next-btn {
+    position: absolute;
+    right: 28px;
+    bottom: 22px;
+    padding: 8px 20px;
+    background: #b98a25;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .next-btn:hover {
+    background: #8d5a25;
+  }
+
+  /* 九宫格拼图框 */
+  .puzzle-board {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    width: 360px;
+    height: 360px;
+    border: 3px solid #b98a25;
+    border-radius: 8px;
+    background: rgba(255,250,240,0.9);
+    display: none;
+    z-index: 15;
+    background-image: linear-gradient(#d9c7a8 1px transparent 1px),
+                      linear-gradient(90deg, #d9c7a8 1px transparent 1px);
+    background-size: 120px 120px;
+  }
+
+  /* 拼图碎片 */
+  .puzzle-piece {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background-image: url('assets/images/puzzle.png');
+    background-size: 360px 360px !important;
+    background-repeat: no-repeat;
+    cursor: grab;
+    z-index: 20;
+    transition: transform 0.15s;
+    border: 1px solid #f0e6d6;
+  }
+  .puzzle-piece:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+    z-index: 100;
+  }
+
+  /* 验证按钮 */
+  #checkBtn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 80px;
+    padding: 12px 30px;
+    background: #b98a25;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: none;
+    z-index: 20;
+  }
+  #checkBtn:hover {
+    background: #8d5a25;
+  }
+
+  /* 失败弹窗 */
+  .result-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s;
+  }
+  .result-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .result-box {
+    width: 400px;
+    padding: 40px;
+    background: #fff;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .result-box p {
+    font-size: 20px;
+    margin-bottom: 30px;
+    color: #333;
+  }
+  .result-btn {
+    padding: 10px 25px;
+    background: #b98a25;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .result-btn:hover {
+    background: #8d5a25;
+  }
+
+  /* 成功弹窗 */
+  .success-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s;
+  }
+  .success-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .success-box {
+    width: 800px;
+    height: 500px;
+    background: #f5f0e1;
+    border-radius: 12px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+  .success-img {
+    width: 360px;
+    height: 420px;
+    background: url('assets/images/c4h.png') center/contain no-repeat;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .success-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+  }
+  .success-text {
+    font-size: 22px;
+    color: #333;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .to-end-btn {
+    padding: 16px 40px;
+    background: #b98a25;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .to-end-btn:hover {
+    background: #8d5a25;
+  }
+</style>
+</head>
+<body>
+
+<!-- 开场视频 -->
+<div id="videoContainer">
+  <video id="introVideo" muted playsinline loop>
+    <source src="assets/animations/level4b.mp4" type="video/mp4">
+  </video>
+</div>
+
+<!-- 进入关卡按钮 -->
+<button id="enterBtn">＞＞进入关卡</button>
+
+<!-- 验证按钮 -->
+<button id="checkBtn">验证拼图</button>
+
+<!-- 失败弹窗 -->
+<div class="result-modal" id="failModal">
+  <div class="result-box">
+    <p>拼图错误，请重新挑战！</p>
+    <button class="result-btn" onclick="restartPuzzle()">重新开始</button>
+  </div>
+</div>
+
+<!-- 成功弹窗 -->
+<div class="success-modal" id="successModal">
+  <div class="success-box">
+    <div class="success-img"></div>
+    <div class="success-content">
+      <div class="success-text">
+        小友聪慧过人，耐心十足，成功复原古建拼图，老夫在此恭喜你通关！华夏建筑之美，匠心传承千古，望你此行有所收获。
+      </div>
+      <button class="to-end-btn" onclick="location.href='finish.html'">最终结局</button>
+    </div>
+  </div>
+</div>
+
+<!-- 主内容 -->
+<div id="overlay"></div>
+<div class="character xuxiake" id="boy"></div>
+<div class="character girl" id="girl"></div>
+
+<div class="puzzle-board" id="board"></div>
+
+<div class="dialog-box" id="dialog">
+  <div class="speaker-name" id="speakerName"></div>
+  <div class="dialog-text" id="text"></div>
+  <button class="next-btn" onclick="nextTalk()">继续</button>
+</div>
+
+<script>
+  const pieceW = 120;
+  const pieceH = 120;
+  let dragging = null;
+  let offsetX, offsetY;
+  let puzzlePieces = [];
+  let typingTimer = null;
+
+  const video = document.getElementById('introVideo');
+  const videoContainer = document.getElementById('videoContainer');
+  const enterBtn = document.getElementById('enterBtn');
+  const checkBtn = document.getElementById('checkBtn');
+  const failModal = document.getElementById('failModal');
+  const successModal = document.getElementById('successModal');
+  const speakerName = document.getElementById('speakerName');
+  const textElem = document.getElementById('text');
+
+  // 自动播放视频
+  video.play();
+
+  // 点击进入关卡
+  enterBtn.addEventListener('click', () => {
+    enterBtn.style.display = 'none';
+    video.pause();
+    videoContainer.style.opacity = 0;
+    setTimeout(() => {
+      videoContainer.style.display = 'none';
+      initDialog();
+    }, 1500);
+  });
+
+  // 对话内容
+  const talks = [
+    { speaker: 'xuxiake', name: '徐霞客', text: '我徐霞客一生踏遍山河，所见亭台楼阁，皆藏古人匠心。' },
+    { speaker: 'girl', name: '小楼', text: '这些古建筑真美，可惜很多都快被遗忘了。' },
+    { speaker: 'xuxiake', name: '徐霞客', text: '这幅古建图被拆成了碎片，你能将它复原吗？' },
+    { speaker: 'girl', name: '小楼', text: '徐先生放心，我一定会把它完整拼回来！' },
+    { speaker: 'xuxiake', name: '徐霞客', text: '将碎片拖到对应格子中对齐，便可重现完整图景。' }
+  ];
+
+  let idx = 0;
+
+  // 初始化对话
+  function initDialog() {
+    document.getElementById('overlay').style.opacity = 1;
+    showTalk();
+  }
+
+  // 打字效果函数
+  function typeText(element, text, speed = 40) {
+    let index = 0;
+    element.innerText = '';
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(function type() {
+      if (index < text.length) {
+        element.innerText += text.charAt(index);
+        index++;
+        typingTimer = setTimeout(type, speed);
+      }
+    }, speed);
+  }
+
+  // 显示对话
+  function showTalk() {
+    const t = talks[idx];
+    speakerName.innerText = t.name;
+    
+    // 切换人物明暗
+    if (t.speaker === 'xuxiake') {
+      boy.className = 'character xuxiake bright';
+      girl.className = 'character girl dim';
+    } else {
+      boy.className = 'character xuxiake dim';
+      girl.className = 'character girl bright';
+    }
+    
+    // 打字效果显示文字
+    typeText(textElem, t.text);
+  }
+
+  // 下一句对话
+  function nextTalk() {
+    clearTimeout(typingTimer);
+    idx++;
+    if (idx < talks.length) {
+      showTalk();
+    } else {
+      dialog.style.display = 'none';
+      board.style.display = 'block';
+      checkBtn.style.display = 'block';
+      document.getElementById('overlay').style.opacity = 0;
+      boy.style.display = 'none';
+      girl.className = 'character girl bright';
+      initPuzzle();
+    }
+  }
+
+  // 拼图初始化
+  function initPuzzle() {
+    puzzlePieces.forEach(p => p.remove());
+    puzzlePieces = [];
+
+    const board = document.getElementById('board');
+    const rect = board.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    const positions = [
+      { left: cx - 160, top: cy - 320 },
+      { left: cx + 40,  top: cy - 320 },
+      { left: cx - 240, top: cy + 260 },
+      { left: cx - 80,  top: cy + 260 },
+      { left: cx + 80,  top: cy + 260 },
+      { left: cx - 320, top: cy - 140 },
+      { left: cx - 320, top: cy + 20 },
+      { left: cx + 200, top: cy - 140 },
+      { left: cx + 200, top: cy + 20 }
+    ];
+
+    for (let i = 0; i < 9; i++) {
+      const p = document.createElement('div');
+      p.className = 'puzzle-piece';
+      p.dataset.index = i;
+
+      const row = Math.floor(i / 3);
+      const col = i % 3;
+      p.style.backgroundPosition = `-${col * pieceW}px -${row * pieceH}px`;
+
+      p.style.left = positions[i].left + 'px';
+      p.style.top = positions[i].top + 'px';
+
+      p.addEventListener('mousedown', startDrag);
+      document.body.appendChild(p);
+      puzzlePieces.push(p);
+    }
+  }
+
+  function startDrag(e) {
+    dragging = this;
+    const rect = dragging.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    dragging.style.zIndex = 100;
+
+    document.addEventListener('mousemove', dragMove);
+    document.addEventListener('mouseup', dragEnd);
+  }
+
+  function dragMove(e) {
+    if (!dragging) return;
+    dragging.style.left = (e.clientX - offsetX) + 'px';
+    dragging.style.top = (e.clientY - offsetY) + 'px';
+  }
+
+  function dragEnd() {
+    if (!dragging) return;
+
+    const board = document.getElementById('board');
+    const boardRect = board.getBoundingClientRect();
+    
+    const pieceCenterX = parseFloat(dragging.style.left) + pieceW / 2;
+    const pieceCenterY = parseFloat(dragging.style.top) + pieceH / 2;
+
+    if (
+      pieceCenterX >= boardRect.left &&
+      pieceCenterX <= boardRect.right &&
+      pieceCenterY >= boardRect.top &&
+      pieceCenterY <= boardRect.bottom
+    ) {
+      const col = Math.floor((pieceCenterX - boardRect.left) / pieceW);
+      const row = Math.floor((pieceCenterY - boardRect.top) / pieceH);
+      const snapX = boardRect.left + col * pieceW;
+      const snapY = boardRect.top + row * pieceH;
+
+      dragging.style.left = snapX + 'px';
+      dragging.style.top = snapY + 'px';
+    }
+
+    dragging.style.zIndex = 20;
+    dragging = null;
+    document.removeEventListener('mousemove', dragMove);
+    document.removeEventListener('mouseup', dragEnd);
+  }
+
+  // 验证拼图
+  function checkPuzzle() {
+    const board = document.getElementById('board');
+    const b = board.getBoundingClientRect();
+    let allOk = true;
+
+    puzzlePieces.forEach(p => {
+      const i = parseInt(p.dataset.index);
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const targetX = b.left + col * pieceW;
+      const targetY = b.top + row * pieceH;
+      const cx = parseFloat(p.style.left);
+      const cy = parseFloat(p.style.top);
+      
+      if (Math.abs(cx - targetX) > 5 || Math.abs(cy - targetY) > 5) {
+        allOk = false;
+      }
+    });
+
+    if (allOk) {
+      successModal.classList.add('show');
+    } else {
+      failModal.classList.add('show');
+    }
+  }
+
+  // 重新开始拼图
+  function restartPuzzle() {
+    failModal.classList.remove('show');
+    initPuzzle();
+  }
+
+  // 绑定验证按钮事件
+  checkBtn.addEventListener('click', checkPuzzle);
+</script>
+</body>
+</html>
